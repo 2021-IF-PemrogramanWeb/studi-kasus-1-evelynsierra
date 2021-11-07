@@ -1,40 +1,71 @@
 <?php
-require_once('config.php');
+//menyertakan file program koneksi.php pada register
+require('config.php');
+//inisialisasi session
+session_start();
 
+$error = '';
+$validate = '';
+//mengecek apakah form registrasi di submit atau tidak
 if (isset($_POST['register'])) {
+  echo $_POST['register'];
+  // menghilangkan backshlases
+  $username = stripslashes($_POST['username']);
+  //cara sederhana mengamankan dari sql injection
+  $username = mysqli_real_escape_string($con, $username);
+  $name     = stripslashes($_POST['name']);
+  $name     = mysqli_real_escape_string($con, $name);
+  $email    = stripslashes($_POST['email']);
+  $email    = mysqli_real_escape_string($con, $email);
+  $password = stripslashes($_POST['password']);
+  $password = mysqli_real_escape_string($con, $password);
+  $notelp    = stripslashes($_POST['notelp']);
+  $notelp    = mysqli_real_escape_string($con, $notelp);
+  $jurusan    = stripslashes($_POST['jurusan']);
+  $jurusan    = mysqli_real_escape_string($con, $jurusan);
 
-  //filter data yang diinputkan
+  //cek apakah nilai yang diinputkan pada form ada yang kosong atau tidak
+  if (!empty(trim($name)) && !empty(trim($username)) && !empty(trim($email)) && !empty(trim($password)) && !empty(trim($notelp)) && !empty(trim($jurusan))) {
+    //mengecek apakah password yang diinputkan sama dengan re-password yang diinputkan kembali
+    //if ($password == $repass) {
+    //memanggil method cek_nama untuk mengecek apakah user sudah terdaftar atau belum
+    if (cek_nama($name, $con) == 0) {
+      //hashing password sebelum disimpan didatabase
+      $pass  = password_hash($password, PASSWORD_DEFAULT);
+      //insert data ke database
+      $query = "INSERT INTO mahasiswa (username_mahasiswa,nama_mahasiswa,email_mahasiswa, password,no_telp_mahasiswa,jurusan_mahasiswa ) 
+                  VALUES ('$username','$name','$email','$pass','$notelp','$jurusan')";
+      $result   = mysqli_query($con, $query);
+      echo "result=" . $result;
+      //jika insert data berhasil maka akan diredirect ke halaman index.php serta menyimpan data username ke session
+      if ($result) {
+        $_SESSION['username'] = $username;
 
-  $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
-  $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
-  $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
-  //enkripsi password
-  $password = password_hash($_POST["password"], PASSWORD_DEFAULT);
+        // header('Location: login.php');
+        echo '<script>
+        window.location.href = "https://studi-kasus-1-evelynsierraa.000webhostapp.com/login.php";
+        </script>';
+        //jika gagal maka akan menampilkan pesan error
+      } else {
+        $error =  'Register User Gagal !!';
+      }
+    } else {
+      $error =  'Username sudah terdaftar !!';
+    }
+    //} //else {
+    //$validate = 'Password tidak sama !!';
+    //}
+  } else {
+    $error =  'Data tidak boleh kosong !!';
+  }
+}
 
-  $notelp = filter_input(INPUT_POST, 'notelp', FILTER_SANITIZE_STRING);
-  $jurusan = filter_input(INPUT_POST, 'jurusan', FILTER_SANITIZE_STRING);
-
-  //menyiapkan query
-  $sql = "INSERT INTO mahasiswa (username_mahasiswa, nama_mahasiswa, no_telp_mahasiswa, email_mahasiswa, password, jurusan_mahasiswa)
-          VALUES (:username, :name, :notelp, :email, :password, :jurusan)";
-  $stmt = $db->prepare($sql);
-
-
-  //bind parameter ke query
-  $params = array(
-    ":username" => $username,
-    ":name" => $name,
-    ":notelp" => $notelp,
-    ":email" => $email,
-    ":password" => $password,
-    ":jurusan" => $jurusan
-  );
-
-  //eksekusi query untuk simpan ke database
-  $saved = $stmt->execute($params);
-
-  //jika user sudah terdaftar maka akan dialihkan ke halaman login
-  if ($saved) header("Location : login.php");
+//fungsi untuk mengecek username apakah sudah terdaftar atau belum
+function cek_nama($username, $con)
+{
+  $nama = mysqli_real_escape_string($con, $username);
+  $query = "SELECT * FROM mahasiswa WHERE username = '$nama'";
+  if ($result = mysqli_query($con, $query)) return mysqli_num_rows($result);
 }
 ?>
 
@@ -59,6 +90,7 @@ if (isset($_POST['register'])) {
       <div class="col-lg-10 col-xl-9 mx-auto">
         <div class="card flex-row my-5 border-0 shadow rounded-3 overflow-hidden">
           <div class="card-img-left d-none d-md-flex">
+            <img src='https://source.unsplash.com/WEQbe2jBg40/414x512'>
             <!-- Background image for card set in CSS! -->
           </div>
           <div class="card-body p-4 p-sm-5">
@@ -96,7 +128,9 @@ if (isset($_POST['register'])) {
               </div>
 
               <div class="d-grid mb-2">
-                <button class="btn btn-lg btn-primary btn-login fw-bold text-uppercase" name="register" value="register">Register</button>
+                <!-- <button class="btn btn-lg btn-primary btn-login fw-bold text-uppercase" name="register" value="register">Register</button>
+--> <input type="hidden" name="register" value="register">
+                <input type="submit" class="btn btn-lg btn-primary btn-login fw-bold text-uppercase" value="register">
               </div>
             </form>
             <a class="d-block text-center mt-2 small" href="login.php">Have an account? Sign In</a>

@@ -1,14 +1,16 @@
 <?php
+$host     = 'localhost';
+$user     = 'root'; // diisi dengan user database kalian biasanya
+                    // defaultnya bernama root jika kita belum 
+                    // merubahnya
+$password = '';  //diisi dengan password database kalian biasanya
+                 // defaultnya kosong
+$db       = 'pbkk_mahasiswa'; //diisi dengan nama database kalian
+  
+$con = mysqli_connect($host, $user, $password, $db) or die(); 
+error_reporting(E_ALL ^ (E_NOTICE|E_WARNING)); 
+?>
 
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "pbkk_mahasiswa";
 
-try {
-    //create PDO connection 
-    $db = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-} catch (PDOException $e) {
-    //show error
-    die("Terjadi masalah: " . $e->getMessage());
-}
+
+

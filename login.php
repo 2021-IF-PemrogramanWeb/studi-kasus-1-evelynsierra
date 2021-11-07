@@ -1,35 +1,59 @@
 <?php
-require_once("config.php");
+//menyertakan file program koneksi.php pada register
+require('config.php');
+//inisialisasi session
+session_start();
 
-if (isset($_POST['login'])) {
+$error = '';
+$validate = '';
 
-  $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
-  $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
+//mengecek apakah sesssion username tersedia atau tidak jika tersedia maka akan diredirect ke halaman index
+if (isset($_SESSION['username'])) {
+  echo '<script>
+        window.location.href = "https://studi-kasus-1-evelynsierraa.000webhostapp.com/table.php";
+        </script>';
+} //header('Location: table.php');
 
-  $sql = "SELECT * FROM mahasiswa WHERE username=:username AND password=:password";
-  $stmt = $db->prepare($sql);
+//mengecek apakah form disubmit atau tidak
+if (isset($_POST['submit'])) {
 
-  //bind parameter ke query
-  $params = array(
-    ":username" => $username,
-    ":password" => $password,
-  );
+  // menghilangkan backshlases
+  $username = stripslashes($_POST['username']);
+  //cara sederhana mengamankan dari sql injection
+  $username = mysqli_real_escape_string($con, $username);
+  // menghilangkan backshlases
+  $password = stripslashes($_POST['password']);
+  //cara sederhana mengamankan dari sql injection
+  $password = mysqli_real_escape_string($con, $password);
 
-  $stmt->execute($params);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+  //cek apakah nilai yang diinputkan pada form ada yang kosong atau tidak
+  if (!empty(trim($username)) && !empty(trim($password))) {
 
-  //jika user terdaftar
-  if (true) {
-    //verifikasi password
-    if (true) {
-      //buat session
-      session_start();
-      $_SESSION["user"] = $user;
-      //login sukses, ke halaman table
-      header("Location : table.php");
+    //select data berdasarkan username dari database
+    $query      = "SELECT * FROM mahasiswa WHERE username_mahasiswa = '$username'";
+    $result     = mysqli_query($con, $query);
+    $rows       = mysqli_num_rows($result);
+
+    if ($rows != 0) {
+      $hash   = mysqli_fetch_assoc($result)['password'];
+      if (password_verify($password, $hash)) {
+        $_SESSION['username'] = $username;
+
+        // header('Location: table.php');
+        echo '<script>
+        window.location.href = "https://studi-kasus-1-evelynsierraa.000webhostapp.com/table.php";
+        </script>';
+      }
+
+      //jika gagal maka akan menampilkan pesan error
+    } else {
+      $error =  'Register User Gagal !!';
     }
+  } else {
+    $error =  'Data tidak boleh kosong !!';
   }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -73,31 +97,33 @@ if (isset($_POST['login'])) {
 
 
               <div class="d-grid mb-2">
-                <input type="submit" class="btn btn-success btn-block" name="login" value="LOGIN">
-              </div>
-              
-              </form>
-              <a class="d-block text-center mt-2 small" href="register.php">Don't have an account? Register</a>
-
-              <hr class="my-4">
-
-              <div class="d-grid mb-2">
-                <button class="btn btn-lg btn-google btn-login fw-bold text-uppercase" type="submit">
-                  <i class="fab fa-google me-2"></i> Sign in with Google
-                </button>
+                <input type="hidden" name="submit" value="submit">
+                <input type="submit" class="btn btn-lg btn-primary btn-login fw-bold text-uppercase" name="login" value="LOGIN">
               </div>
 
-              <div class="d-grid">
-                <button class="btn btn-lg btn-facebook btn-login fw-bold text-uppercase" type="submit">
-                  <i class="fab fa-facebook-f me-2"></i> Sign in with Facebook
-                </button>
-              </div>
+            </form>
+            <a class="d-block text-center mt-2 small" href="register.php">Don't have an account? Register</a>
 
-            
+            <hr class="my-4">
+
+            <div class="d-grid mb-2">
+              <button class="btn btn-lg btn-google btn-login fw-bold text-uppercase" type="submit">
+                <i class="fab fa-google me-2"></i> Sign in with Google
+              </button>
+            </div>
+
+            <div class="d-grid">
+              <button class="btn btn-lg btn-facebook btn-login fw-bold text-uppercase" type="submit">
+                <i class="fab fa-facebook-f me-2"></i> Sign in with Facebook
+              </button>
+            </div>
+
+
           </div>
         </div>
       </div>
     </div>
   </div>
 </body>
+
 </html>

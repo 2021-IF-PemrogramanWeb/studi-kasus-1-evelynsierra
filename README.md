@@ -1,2 +1,2 @@
 # studi-kasus-1-evelynsierra
-## Membuat website Login dan Register
+studi-kasus-1-evelynsierra created by GitHub Classroom
